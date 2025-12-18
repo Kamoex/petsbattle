@@ -14,7 +14,6 @@ from app.manus.schema import Memory
 class ws_session(tornado.websocket.WebSocketHandler):
     def init(self):
         self.handlers = ws_handlers(self)
-        os.makedirs(f"workspace/{self.request_id}", exist_ok=True)
 
     def check_origin(self, origin):
         # 允许跨域访问
@@ -25,7 +24,7 @@ class ws_session(tornado.websocket.WebSocketHandler):
             self.request_id = str(uuid.uuid4())
             logger.info(f"request_id: {self.request_id} connect success")
             self.init()
-            # asyncio.create_task(self.process())
+            # TODO 发送 connect_success
             resp = msg_resp(server.ws_proto.PROTO.MSG_CONNECT_SUCCESS, self.request_id, {}, CODE.SUCCESS)
             self.send_data(resp.to_str())
         except Exception as e:
@@ -37,8 +36,6 @@ class ws_session(tornado.websocket.WebSocketHandler):
             if isinstance(message, str):
                 if message == "ping":
                     logger.info(f"request_id: {self.request_id}, message: {message}")
-                    return
-                if self.my_test(message):
                     return
                 # 消息分发
                 asyncio.create_task(self.handlers.handle(message))
