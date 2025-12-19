@@ -1,4 +1,4 @@
-from proto import proto
+from my_proto import proto
 from login import load_pets_data
 from utils.logger import logger
 

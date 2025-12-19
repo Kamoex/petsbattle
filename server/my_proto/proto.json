@@ -173,18 +173,20 @@
         "id": 1015,
         "pet_id": "宠物ID int"
     },
+    
     "pet_battle_turn_s2c": {
         "desc":"宠物战斗回合信息",
         "id": 1016,
         "data":{
             "turn": "回合数 int",
             "hp":"宠物HP int",
+            "enemy_hp":"敌人HP int",
             "status":"回和状态 1 出题中 2 答题中 3 评判中 4.结果",
             "question": "内容 string",
             "answers": "答案 string",
             "enemy_answers": "敌人答案 string",
             "correct_answer": "评判答案 string",
-            "winner_id": "获胜玩家ID int"
+            "winner_name": "获胜玩家名字 string"
         }
     },
     "pet_battle_result_s2c": {

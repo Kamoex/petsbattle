@@ -1,12 +1,12 @@
 import time
 import json
 import asyncio
-from proto.proto import sign_in_s2c_data
 from utils.logger import logger
 
 
 from tornado.httputil import HTTPHeaders
 from tornado.httpclient import AsyncHTTPClient
+import httpx
 
 MODEL_NAME = "gpt-5"
 API_URL = "http://ai-service.tal.com/openai-compatible/v1/chat/completions"
@@ -146,24 +146,14 @@ async def req_gpt_by_messages(message_list):
 
 async def req_gpt_stream(system_prompt: str, user_ask: str):
     """
-    流式请求 GPT API，返回异步生成器，yield OpenAI API 的原始 chunk
+    流式请求GPT API，通过yield返回SSE响应的JSON对象
     """
-    http_client = AsyncHTTPClient()
     begin_time = time.time()
-    queue = asyncio.Queue()
-    
-    def streaming_callback(chunk):
-        """处理流式响应的回调函数"""
-        try:
-            if chunk:
-                queue.put_nowait(("data", chunk))
-        except Exception as e:
-            queue.put_nowait(("error", e))
     
     try:
         # 准备请求数据
         request_data = {
-            "model": "gpt-5",
+            "model": MODEL_NAME,
             "messages": [
                 {
                     "role": "system", 
@@ -177,118 +167,56 @@ async def req_gpt_stream(system_prompt: str, user_ask: str):
             "stream": True
         }
         
-        # 准备请求头
-        headers = HTTPHeaders({
+        headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {API_KEY}"
-        })
+        }
         
-        # 发送异步请求
-        response = await http_client.fetch(
-            API_URL,
-            method="POST",
-            headers=headers,
-            body=json.dumps(request_data),
-            validate_cert=False,
-            request_timeout=300.0,
-            streaming_callback=streaming_callback
-        )
-        
-        if response.code != 200:
-            raise ValueError(f"request vision api failed code: {response.code}, msg: {response.body}")
-        
-        # 处理流式数据
-        buffer = b""
-        response_complete = False
-        
-        while not response_complete or not queue.empty():
-            try:
-                # 从队列获取数据，设置超时避免无限等待
-                # 如果响应已完成且队列为空，则退出
-                if response_complete and queue.empty():
-                    break
-                    
-                item_type, item_data = await asyncio.wait_for(queue.get(), timeout=1.0)
+        # 使用httpx发起流式请求
+        async with httpx.AsyncClient(verify=False, timeout=300.0) as client:
+            async with client.stream('POST', API_URL, json=request_data, headers=headers) as response:
+                if response.status_code != 200:
+                    logger.error(f"stream request failed with code: {response.status_code}")
+                    return
                 
-                if item_type == "error":
-                    raise item_data
-                
-                buffer += item_data
-                
-                # 解析 SSE 格式的数据
-                while b"\n" in buffer:
-                    line, buffer = buffer.split(b"\n", 1)
+                # 逐行读取SSE响应
+                async for line in response.aiter_lines():
                     line = line.strip()
                     
+                    # 跳过空行
                     if not line:
                         continue
                     
-                    # SSE 格式: data: {...} 或 data: [DONE]
-                    if line.startswith(b"data: "):
-                        data_str = line[6:].decode("utf-8")
+                    # 解析SSE格式（以 "data: " 开头）
+                    if line.startswith("data: "):
+                        data_str = line[6:]  # 去掉 "data: " 前缀
                         
+                        # 检查是否是结束标记
                         if data_str == "[DONE]":
-                            cost_time = time.time() - begin_time
-                            logger.info(f"vision api stream total cost time: {cost_time:.2f}s")
-                            http_client.close()
-                            return
+                            break
                         
                         try:
-                            chunk = json.loads(data_str)
-                            yield chunk
+                            # 解析JSON并yield
+                            data_json = json.loads(data_str)
+                            yield data_json
                         except json.JSONDecodeError as e:
-                            logger.warning(f"Failed to parse chunk JSON: {e}, data: {data_str}")
+                            logger.warning(f"failed to parse SSE data: {data_str}, error: {e}")
                             continue
-                
-            except asyncio.TimeoutError:
-                # fetch 返回后，标记响应已完成
-                response_complete = True
-                # 继续处理队列中剩余的数据
-                if queue.empty():
-                    break
-                continue
-        
-        # 处理剩余的 buffer
-        if buffer:
-            for line in buffer.split(b"\n"):
-                line = line.strip()
-                if line.startswith(b"data: "):
-                    data_str = line[6:].decode("utf-8")
-                    if data_str != "[DONE]":
-                        try:
-                            chunk = json.loads(data_str)
-                            print(data_str)
-                            yield chunk
-                        except json.JSONDecodeError:
-                            pass
         
         cost_time = time.time() - begin_time
-        logger.info(f"vision api stream total cost time: {cost_time:.2f}s")
-        http_client.close()
+        logger.info(f"stream api total cost time: {cost_time:.2f}s")
         
     except Exception as e:
-        logger.error(f"vision api stream error: {str(e)}")
+        logger.error(f"stream api error: {str(e)}")
         import traceback
-        logger.error(f"vision api stream error traceback: {traceback.format_exc()}")
-        http_client.close()
-        raise
+        logger.error(f"traceback: {traceback.format_exc()}")
 
 
 async def req_gpt_by_messages_stream(message_list):
     """
-    流式请求 GPT API（使用消息列表），返回异步生成器，yield OpenAI API 的原始 chunk
+    通过消息列表流式请求GPT API，通过yield返回SSE响应的JSON对象
     """
-    http_client = AsyncHTTPClient()
     begin_time = time.time()
-    queue = asyncio.Queue()
-    
-    def streaming_callback(chunk):
-        """处理流式响应的回调函数"""
-        try:
-            if chunk:
-                queue.put_nowait(("data", chunk))
-        except Exception as e:
-            queue.put_nowait(("error", e))
     
     try:
         # 准备请求数据
@@ -298,99 +226,46 @@ async def req_gpt_by_messages_stream(message_list):
             "stream": True
         }
         
-        # 准备请求头
-        headers = HTTPHeaders({
+        headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {API_KEY}"
-        })
+        }
         
-        # 发送异步请求
-        response = await http_client.fetch(
-            API_URL,
-            method="POST",
-            headers=headers,
-            body=json.dumps(request_data),
-            validate_cert=False,
-            request_timeout=300.0,
-            streaming_callback=streaming_callback
-        )
-        
-        if response.code != 200:
-            raise ValueError(f"request vision api failed code: {response.code}, msg: {response.body}")
-        
-        # 处理流式数据
-        buffer = b""
-        response_complete = False
-        
-        while not response_complete or not queue.empty():
-            try:
-                # 从队列获取数据，设置超时避免无限等待
-                # 如果响应已完成且队列为空，则退出
-                if response_complete and queue.empty():
-                    break
-                    
-                item_type, item_data = await asyncio.wait_for(queue.get(), timeout=1.0)
+        # 使用httpx发起流式请求
+        async with httpx.AsyncClient(verify=False, timeout=300.0) as client:
+            async with client.stream('POST', API_URL, json=request_data, headers=headers) as response:
+                if response.status_code != 200:
+                    logger.error(f"stream request failed with code: {response.status_code}")
+                    return
                 
-                if item_type == "error":
-                    raise item_data
-                
-                buffer += item_data
-                
-                # 解析 SSE 格式的数据
-                while b"\n" in buffer:
-                    line, buffer = buffer.split(b"\n", 1)
+                # 逐行读取SSE响应
+                async for line in response.aiter_lines():
                     line = line.strip()
                     
+                    # 跳过空行
                     if not line:
                         continue
                     
-                    # SSE 格式: data: {...} 或 data: [DONE]
-                    if line.startswith(b"data: "):
-                        data_str = line[6:].decode("utf-8")
+                    # 解析SSE格式（以 "data: " 开头）
+                    if line.startswith("data: "):
+                        data_str = line[6:]  # 去掉 "data: " 前缀
                         
+                        # 检查是否是结束标记
                         if data_str == "[DONE]":
-                            cost_time = time.time() - begin_time
-                            logger.info(f"vision api stream total cost time: {cost_time:.2f}s")
-                            http_client.close()
-                            return
+                            break
                         
                         try:
-                            chunk = json.loads(data_str)
-                            yield chunk
+                            # 解析JSON并yield
+                            data_json = json.loads(data_str)
+                            yield data_json
                         except json.JSONDecodeError as e:
-                            logger.warning(f"Failed to parse chunk JSON: {e}, data: {data_str}")
+                            logger.warning(f"failed to parse SSE data: {data_str}, error: {e}")
                             continue
-                
-            except asyncio.TimeoutError:
-                # fetch 返回后，标记响应已完成
-                response_complete = True
-                # 继续处理队列中剩余的数据
-                if queue.empty():
-                    break
-                continue
-        
-        # 处理剩余的 buffer
-        if buffer:
-            for line in buffer.split(b"\n"):
-                line = line.strip()
-                if line.startswith(b"data: "):
-                    data_str = line[6:].decode("utf-8")
-                    if data_str != "[DONE]":
-                        try:
-                            chunk = json.loads(data_str)
-                            yield chunk
-                        except json.JSONDecodeError:
-                            pass
         
         cost_time = time.time() - begin_time
-        logger.info(f"vision api stream total cost time: {cost_time:.2f}s")
-        http_client.close()
+        logger.info(f"stream api total cost time: {cost_time:.2f}s")
         
     except Exception as e:
-        logger.error(f"vision api stream error: {str(e)}")
+        logger.error(f"stream api error: {str(e)}")
         import traceback
-        logger.error(f"vision api stream error traceback: {traceback.format_exc()}")
-        http_client.close()
-        raise
-
-asyncio.run(req_gpt_stream("", "帮我写一首100字的关于狂的作文"))
+        logger.error(f"traceback: {traceback.format_exc()}")

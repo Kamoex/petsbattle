@@ -9,7 +9,7 @@ import tornado.websocket
 
 from ws_handlers import ws_handlers
 from utils.logger import logger
-import proto
+import my_proto import proto
 
 class ws_session(tornado.websocket.WebSocketHandler):
     def init(self):
@@ -55,10 +55,7 @@ class ws_session(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         logger.info(f"request_id: {self.request_id}, on_close")
-        # self.timer.stop()
         self.handlers.cleanup()
-        # if os.path.exists(f"workspace/{self.request_id}"):
-        #     shutil.rmtree(f"workspace/{self.request_id}")
 
     def send_data(self, content:dict):
         try:

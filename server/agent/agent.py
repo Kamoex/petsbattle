@@ -10,7 +10,12 @@ class agent:
 
     def get_messages(self):
         return self.messages
-        pass
 
-    def execute(self, content: str):
-        pass
+    async def execute(self, content: str):
+        if self.stream:
+            return llm.req_gpt_stream(self.system_prompt, content)
+        else:
+            result = await llm.req_gpt(self.system_prompt, content)
+            self.add_message(content)
+            self.add_message(result)
+            return result

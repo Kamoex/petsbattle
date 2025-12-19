@@ -3,7 +3,7 @@
 由 convert.py 从 proto.json 生成
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from typing import List, Any, Optional
 
 
@@ -213,23 +213,25 @@ class pet_battle_turn_s2c_data:
     def __init__(self):
         self.turn: int = -1
         self.hp: int = -1
+        self.enemy_hp: int = -1
         self.status: str = ""
         self.question: str = ""
         self.answers: str = ""
         self.enemy_answers: str = ""
         self.correct_answer: str = ""
-        self.winner_id: int = -1
+        self.winner_name: str = ""
 
     def to_dict(self) -> dict:
         result = {}
         result['turn'] = self.turn
         result['hp'] = self.hp
+        result['enemy_hp'] = self.enemy_hp
         result['status'] = self.status
         result['question'] = self.question
         result['answers'] = self.answers
         result['enemy_answers'] = self.enemy_answers
         result['correct_answer'] = self.correct_answer
-        result['winner_id'] = self.winner_id
+        result['winner_name'] = self.winner_name
         return result
 
 

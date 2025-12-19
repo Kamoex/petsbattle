@@ -2,13 +2,15 @@ import os
 import json
 import hashlib
 import random
-from proto import proto
+from my_proto import proto
 from config.pet_cfg import PET_CFG
 from config.character_cfg import CHARACTER_CFG
 from utils.logger import logger
 
 # 数据库目录
 DB_DATA_DIR = os.path.join(os.path.dirname(__file__), "db_data")
+# 在线玩家列表
+PLAYER_LIST = {}
 
 def get_user_dir(username: str) -> str:
     """获取用户数据目录路径"""
@@ -151,6 +153,9 @@ async def sign_in(player, msg_dict: dict):
         player["password"] = password
         player["name"] = user_data.get("name", "")
         player["pets"] = pets_data
+
+        # 更新在线玩家列表
+        PLAYER_LIST[username] = player
 
         return resp.to_dict()
         

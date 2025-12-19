@@ -246,7 +246,7 @@ def generate_class_code(class_def: Dict[str, Any], all_classes: Set[str]) -> str
 
 def main():
     # 读取 proto.json
-    with open('/home/ubuntu/workspace/petsbattle/server/proto/proto.json', 'r', encoding='utf-8') as f:
+    with open('/home/ubuntu/workspace/petsbattle/server/my_proto/proto.json', 'r', encoding='utf-8') as f:
         proto_data = json.load(f)
     
     # 收集所有类
@@ -289,10 +289,10 @@ def main():
     
     # 写入文件
     output_code = '\n'.join(output_lines)
-    with open('/home/ubuntu/workspace/petsbattle/server/proto/proto.py', 'w', encoding='utf-8') as f:
+    with open('/home/ubuntu/workspace/petsbattle/server/my_proto/proto.py', 'w', encoding='utf-8') as f:
         f.write(output_code)
     
-    print("转换完成！生成的文件：/home/ubuntu/workspace/petsbattle/server/proto/proto.py")
+    print("转换完成！生成的文件：/home/ubuntu/workspace/petsbattle/server/my_proto/proto.py")
     print(f"共生成 {len(classes)} 个主类，{len(nested_classes_generated)} 个嵌套类")
 
 
