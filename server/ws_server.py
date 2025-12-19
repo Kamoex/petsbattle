@@ -4,12 +4,8 @@ import tornado.ioloop
 import tornado.web
 from pathlib import Path
 from utils.logger import logger
-# sys.path.append(str(Path(os.path.dirname(__file__)).parent))
-# print(sys.path)
-import ws_session
+import ws_session as ws_session
 
-# 全局变量存储子服务进程
-sub_service_process = None
 
 app = tornado.web.Application([
     # WebSocket 路由
