@@ -245,7 +245,7 @@ async def run_battle(player: dict, enemy_player: dict):
             turn += 1
             
             # 添加短暂延迟，避免消息发送过快
-            await asyncio.sleep(0.1)
+            # await asyncio.sleep(0.1)
         
         # 战斗结束，计算结果
         await send_battle_result(player, enemy_player, my_hp, enemy_hp, my_pet, enemy_pet)
