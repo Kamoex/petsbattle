@@ -161,6 +161,7 @@
         "code": 0,
         "message": "0 代表成功",
         "data":{
+            "status":"匹配状态 1 匹配中 2 匹配成功 3 匹配失败",
             "enemy_player_name": "敌人玩家名字 string",
             "enemy_pet_id": "敌人宠物ID int",
             "enemy_pet_name": "敌人宠物名字 string",

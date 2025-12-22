@@ -195,6 +195,7 @@ class pet_exam_final_submit_s2c_data_exam_questions:
 
 class pet_battle_match_s2c_data:
     def __init__(self):
+        self.status: str = ""
         self.enemy_player_name: str = ""
         self.enemy_pet_id: int = -1
         self.enemy_pet_name: str = ""
@@ -202,6 +203,7 @@ class pet_battle_match_s2c_data:
 
     def to_dict(self) -> dict:
         result = {}
+        result['status'] = self.status
         result['enemy_player_name'] = self.enemy_player_name
         result['enemy_pet_id'] = self.enemy_pet_id
         result['enemy_pet_name'] = self.enemy_pet_name

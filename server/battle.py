@@ -41,7 +41,9 @@ async def match_battle(player: dict, msg_dict: dict):
         # 如果没有找到对手，等待其他玩家
         if enemy_player is None:
             resp = proto.pet_battle_match_s2c(code=0, message="")
-            resp.data.status = 1
+            resp_data = proto.pet_battle_match_s2c_data()
+            resp_data.status = 1
+            resp.data = resp_data
             return resp.to_dict()
         
         # 找到对手，配对成功
@@ -68,6 +70,7 @@ async def match_battle(player: dict, msg_dict: dict):
         
         # 给当前玩家发送匹配成功消息
         resp_data = proto.pet_battle_match_s2c_data()
+        resp_data.status = 2
         resp_data.enemy_player_name = enemy_player.get("name", "")
         resp_data.enemy_pet_id = enemy_pet_id
         resp_data.enemy_pet_name = enemy_pet.get("name", "")
@@ -78,6 +81,7 @@ async def match_battle(player: dict, msg_dict: dict):
         
         # 给对手玩家发送匹配成功消息
         enemy_resp_data = proto.pet_battle_match_s2c_data()
+        enemy_resp_data.status = 2
         enemy_resp_data.enemy_player_name = player.get("name", "")
         enemy_resp_data.enemy_pet_id = pet_id
         enemy_resp_data.enemy_pet_name = my_pet.get("name", "")
