@@ -3,7 +3,7 @@
 由 convert.py 从 proto.json 生成
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 from typing import List, Any, Optional
 
 
@@ -545,3 +545,27 @@ class pet_battle_result_s2c:
         result['data'] = self.data.to_dict() if self.data is not None else None
         return result
 
+class pet_battle_match_cancel_c2s:
+    id: int = 1018
+
+    def __init__(self):
+        pass
+
+    def to_dict(self) -> dict:
+        result = {}
+        result['id'] = self.id
+        return result
+
+class pet_battle_match_cancel_s2c:
+    id: int = 1019
+
+    def __init__(self, code: int = -1, message: str = ""):
+        self.code: int = code
+        self.message: str = message
+
+    def to_dict(self) -> dict:
+        result = {}
+        result['id'] = self.id
+        result['code'] = self.code
+        result['message'] = self.message
+        return result

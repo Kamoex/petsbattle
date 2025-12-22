@@ -1,0 +1,16 @@
+2025-12-22 20:58:07.032 | INFO     | __main__:<module>:26 - server start ws://localhost:9160
+2025-12-22 20:58:07.152 | INFO     | ws_session:open:25 - request_id: 4c3801c8-5db9-44f0-bb73-4d24f042f437 connect success
+2025-12-22 21:00:24.914 | INFO     | ws_session:on_close:57 - request_id: 4c3801c8-5db9-44f0-bb73-4d24f042f437, on_close
+2025-12-22 21:00:25.814 | INFO     | ws_session:open:25 - request_id: 885bede0-9eff-424c-b7b6-ce291ffb86c1 connect success
+2025-12-22 21:00:26.898 | INFO     | ws_session:open:25 - request_id: d78a0181-5339-40f5-b4e2-2fb586f4a31e connect success
+2025-12-22 21:00:58.778 | ERROR    | exam:process_question:327 - Error processing question 0: name 'llm' is not defined
+2025-12-22 21:00:58.779 | ERROR    | exam:process_question:327 - Error processing question 1: name 'llm' is not defined
+2025-12-22 21:00:58.781 | ERROR    | exam:process_question:327 - Error processing question 2: name 'llm' is not defined
+2025-12-22 21:00:58.782 | ERROR    | exam:process_question:327 - Error processing question 3: name 'llm' is not defined
+2025-12-22 21:00:58.783 | ERROR    | exam:process_question:327 - Error processing question 4: name 'llm' is not defined
+2025-12-22 21:00:58.784 | ERROR    | exam:process_question:327 - Error processing question 5: name 'llm' is not defined
+2025-12-22 21:00:58.784 | ERROR    | exam:process_question:327 - Error processing question 6: name 'llm' is not defined
+2025-12-22 21:00:58.785 | ERROR    | exam:process_question:327 - Error processing question 7: name 'llm' is not defined
+2025-12-22 21:00:58.786 | ERROR    | exam:process_question:327 - Error processing question 8: name 'llm' is not defined
+2025-12-22 21:00:58.786 | ERROR    | exam:process_question:327 - Error processing question 9: name 'llm' is not defined
+2025-12-22 21:01:23.842 | INFO     | ws_session:on_close:57 - request_id: d78a0181-5339-40f5-b4e2-2fb586f4a31e, on_close

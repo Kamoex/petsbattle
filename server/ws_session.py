@@ -9,7 +9,7 @@ import tornado.websocket
 
 from ws_handlers import ws_handlers
 from utils.logger import logger
-import my_proto import proto
+from my_proto import proto
 
 class ws_session(tornado.websocket.WebSocketHandler):
     def init(self):

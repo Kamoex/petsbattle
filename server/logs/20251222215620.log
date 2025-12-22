@@ -1,0 +1,2 @@
+2025-12-22 21:56:23.751 | INFO     | __main__:<module>:27 - server start ws://localhost:9160
+2025-12-22 21:56:26.708 | INFO     | ws_session:open:25 - request_id: 678366b4-d176-4128-a66d-6ff74a673a5f connect success

@@ -199,5 +199,16 @@
                 {"id":"英语属性ID 3 int", "value": "增加的能力值 int"}
             ]
         }
+    },
+
+    "pet_battle_match_cancel_c2s": {
+        "desc":"宠物战斗匹配取消",
+        "id": 1018
+    },
+    "pet_battle_match_cancel_s2c": {
+        "desc":"宠物战斗匹配取消返回",
+        "id": 1019,
+        "code": 0,
+        "message": "0 代表成功"
     }
 }

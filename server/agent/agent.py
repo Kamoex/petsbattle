@@ -1,4 +1,4 @@
-
+from . import llm
 class agent:
     def __init__(self, system_prompt: str, stream: bool = False):
         self.system_prompt = system_prompt
@@ -13,7 +13,7 @@ class agent:
 
     async def execute(self, content: str):
         if self.stream:
-            return llm.req_gpt_stream(self.system_prompt, content)
+            return await llm.req_gpt_stream(self.system_prompt, content)
         else:
             result = await llm.req_gpt(self.system_prompt, content)
             self.add_message(content)

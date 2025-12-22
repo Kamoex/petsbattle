@@ -3,6 +3,7 @@ import json
 import random
 import time
 import asyncio
+import traceback
 from my_proto import proto
 from login import get_user_dir
 from config.question_cfg import QUESTION_CFG
@@ -188,7 +189,7 @@ async def submit_exam(player: dict, msg_dict: dict):
         questions = exam_info.get("questions", [])
         
         # 检查题目索引是否有效
-        if question_id < 0 or question_id >= len(questions):
+        if int(question_id) < 0 or int(question_id) >= len(questions):
             resp = proto.pet_exam_submit_s2c(code=-1, message="题目ID无效")
             return resp.to_dict()
         
@@ -273,8 +274,8 @@ async def final_submit_exam(player: dict, msg_dict: dict):
                 for i, option in enumerate(options):
                     content += f"{i}. {option}\n"
                 
-                right_answer_idx = question.get('right_answer', -1)
-                player_answer_idx = question.get('answer', -1)
+                right_answer_idx = int(question.get('right_answer', -1))
+                player_answer_idx = int(question.get('answer', -1))
                 
                 if right_answer_idx >= 0 and right_answer_idx < len(options):
                     content += f"\n正确答案：{right_answer_idx} ({options[right_answer_idx]})"
@@ -324,7 +325,7 @@ async def final_submit_exam(player: dict, msg_dict: dict):
                         "analysis": "解析生成失败，请稍后再试。"
                     }
             except Exception as e:
-                logger.error(f"Error processing question {question_idx}: {e}")
+                logger.error(f"Error processing question {question_idx}: {e} {traceback.format_exc()}")
                 # 出错时根据答案判断是否正确
                 right_answer_idx = question.get('right_answer', -1)
                 player_answer_idx = question.get('answer', -1)
@@ -409,7 +410,6 @@ async def final_submit_exam(player: dict, msg_dict: dict):
         
     except Exception as e:
         logger.error(f"final_submit_exam error: {e}")
-        import traceback
         logger.error(f"traceback: {traceback.format_exc()}")
         resp = proto.pet_exam_final_submit_s2c(code=-1, message=f"提交试卷失败: {str(e)}")
         return resp.to_dict()

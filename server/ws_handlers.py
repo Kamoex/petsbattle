@@ -3,7 +3,7 @@ import asyncio
 import traceback
 from utils.logger import logger
 import login as login
-import my_proto as proto
+import my_proto.proto as proto
 import pet as pet
 import exam as exam
 import battle as battle
@@ -24,6 +24,7 @@ class ws_handlers:
         self.handlers[proto.pet_exam_final_submit_c2s.id] = exam.final_submit_exam
         self.handlers[proto.pet_battle_match_c2s.id] = battle.match_battle
         self.handlers[proto.pet_battle_start_c2s.id] = battle.start_battle
+        self.handlers[proto.pet_battle_match_cancel_c2s.id] = battle.match_cancel_battle
 
     def cleanup(self):
         if self.player and "username" in self.player and self.player["username"] in login.PLAYER_LIST:

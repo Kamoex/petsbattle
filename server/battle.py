@@ -2,6 +2,7 @@ import asyncio
 from my_proto import proto
 from utils.logger import logger
 import login
+import traceback
 from agent.agent import agent
 import json
 
@@ -449,6 +450,18 @@ async def send_battle_result(player: dict, enemy_player: dict, my_hp: int, enemy
         import traceback
         logger.error(f"traceback: {traceback.format_exc()}")
 
+def match_cancel_battle(player: dict, msg_dict: dict):
+    """取消战斗匹配"""
+    try:
+        # 清理临时战斗信息
+        cleanup_battle_info(player)
+        resp = proto.pet_battle_match_cancel_s2c(code=0, message="取消战斗匹配成功")
+        return resp.to_dict()
+    except Exception as e:
+        logger.error(f"match_cancel_battle error: {e}")
+        logger.error(f"traceback: {traceback.format_exc()}")
+        resp = proto.pet_battle_match_cancel_s2c(code=-1, message=f"取消战斗匹配失败: {str(e)}")
+        return resp.to_dict()
 
 def cleanup_battle_info(player: dict):
     """清理玩家的临时战斗信息"""

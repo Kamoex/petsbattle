@@ -2,9 +2,9 @@ import os
 import sys
 import tornado.ioloop
 import tornado.web
+import ws_session
 from pathlib import Path
 from utils.logger import logger
-import ws_session as ws_session
 
 
 app = tornado.web.Application([
@@ -17,6 +17,7 @@ app = tornado.web.Application([
     # (r'/agentic-test/agentic/chat/delete', ChatDeleteHandler),
 ])
 
+import agent.llm
 
 # 运行服务器
 if __name__ == "__main__":

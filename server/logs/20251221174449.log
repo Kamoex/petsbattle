@@ -1,0 +1,52 @@
+2025-12-21 17:44:49.824 | INFO     | __main__:<module>:26 - server start ws://localhost:9160
+2025-12-21 17:44:50.616 | INFO     | ws_session:open:25 - request_id: eb02f6bf-6059-4b45-bc7c-7f9dedc0f25e connect success
+2025-12-21 17:44:50.617 | ERROR    | ws_session:open:31 - request_id: eb02f6bf-6059-4b45-bc7c-7f9dedc0f25e, open error: module 'my_proto' has no attribute 'sign_in_c2s', traceback: Traceback (most recent call last):
+  File "D:\workspace\petsbattle\server\ws_session.py", line 26, in open
+    self.init()
+    ~~~~~~~~~^^
+  File "D:\workspace\petsbattle\server\ws_session.py", line 16, in init
+    self.handlers = ws_handlers(self)
+                    ~~~~~~~~~~~^^^^^^
+  File "D:\workspace\petsbattle\server\ws_handlers.py", line 16, in __init__
+    self.register_handlers()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\workspace\petsbattle\server\ws_handlers.py", line 19, in register_handlers
+    self.handlers[proto.sign_in_c2s.id] = login.sign_in
+                  ^^^^^^^^^^^^^^^^^
+AttributeError: module 'my_proto' has no attribute 'sign_in_c2s'
+
+2025-12-21 17:44:50.625 | INFO     | ws_session:on_close:57 - request_id: eb02f6bf-6059-4b45-bc7c-7f9dedc0f25e, on_close
+2025-12-21 17:44:53.635 | INFO     | ws_session:open:25 - request_id: 88a86526-948a-4454-a014-3e56110ce110 connect success
+2025-12-21 17:44:53.636 | ERROR    | ws_session:open:31 - request_id: 88a86526-948a-4454-a014-3e56110ce110, open error: module 'my_proto' has no attribute 'sign_in_c2s', traceback: Traceback (most recent call last):
+  File "D:\workspace\petsbattle\server\ws_session.py", line 26, in open
+    self.init()
+    ~~~~~~~~~^^
+  File "D:\workspace\petsbattle\server\ws_session.py", line 16, in init
+    self.handlers = ws_handlers(self)
+                    ~~~~~~~~~~~^^^^^^
+  File "D:\workspace\petsbattle\server\ws_handlers.py", line 16, in __init__
+    self.register_handlers()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\workspace\petsbattle\server\ws_handlers.py", line 19, in register_handlers
+    self.handlers[proto.sign_in_c2s.id] = login.sign_in
+                  ^^^^^^^^^^^^^^^^^
+AttributeError: module 'my_proto' has no attribute 'sign_in_c2s'
+
+2025-12-21 17:44:53.640 | INFO     | ws_session:on_close:57 - request_id: 88a86526-948a-4454-a014-3e56110ce110, on_close
+2025-12-21 17:44:56.650 | INFO     | ws_session:open:25 - request_id: 0f7dcba2-f8bb-4a15-9dab-bae1a53fb083 connect success
+2025-12-21 17:44:56.651 | ERROR    | ws_session:open:31 - request_id: 0f7dcba2-f8bb-4a15-9dab-bae1a53fb083, open error: module 'my_proto' has no attribute 'sign_in_c2s', traceback: Traceback (most recent call last):
+  File "D:\workspace\petsbattle\server\ws_session.py", line 26, in open
+    self.init()
+    ~~~~~~~~~^^
+  File "D:\workspace\petsbattle\server\ws_session.py", line 16, in init
+    self.handlers = ws_handlers(self)
+                    ~~~~~~~~~~~^^^^^^
+  File "D:\workspace\petsbattle\server\ws_handlers.py", line 16, in __init__
+    self.register_handlers()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\workspace\petsbattle\server\ws_handlers.py", line 19, in register_handlers
+    self.handlers[proto.sign_in_c2s.id] = login.sign_in
+                  ^^^^^^^^^^^^^^^^^
+AttributeError: module 'my_proto' has no attribute 'sign_in_c2s'
+
+2025-12-21 17:44:56.655 | INFO     | ws_session:on_close:57 - request_id: 0f7dcba2-f8bb-4a15-9dab-bae1a53fb083, on_close

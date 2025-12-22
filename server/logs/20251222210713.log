@@ -1,0 +1,16 @@
+2025-12-22 21:07:13.929 | INFO     | __main__:<module>:26 - server start ws://localhost:9160
+2025-12-22 21:07:16.953 | INFO     | ws_session:open:25 - request_id: e7b19ece-96ea-487e-9eea-5cb50f6dddc3 connect success
+2025-12-22 21:38:41.432 | INFO     | ws_session:on_close:57 - request_id: e7b19ece-96ea-487e-9eea-5cb50f6dddc3, on_close
+2025-12-22 21:38:41.716 | INFO     | ws_session:open:25 - request_id: f5f02f13-8087-4b3a-b2e8-140abe8e3fe7 connect success
+2025-12-22 21:38:43.332 | INFO     | ws_session:on_close:57 - request_id: f5f02f13-8087-4b3a-b2e8-140abe8e3fe7, on_close
+2025-12-22 21:51:18.610 | INFO     | ws_session:open:25 - request_id: bcb23b10-c8f3-44c4-ad6f-d28e766b77d2 connect success
+2025-12-22 21:52:25.245 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.252 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.252 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.253 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.253 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.253 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.253 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.254 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.254 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
+2025-12-22 21:52:25.254 | ERROR    | agent.llm:req_gpt:73 - vision api error (attempt 1/3): Timeout while connecting
