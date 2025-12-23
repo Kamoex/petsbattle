@@ -1,4 +1,5 @@
 import asyncio
+import random
 from my_proto import proto
 from utils.logger import logger
 import login
@@ -126,7 +127,7 @@ async def start_battle(player: dict, msg_dict: dict):
         
         # 发送初始消息
         init_data = proto.pet_battle_turn_s2c_data()
-        init_data.turn = 1
+        init_data.turn = 0
         init_data.hp = 100
         init_data.enemy_hp = 100
         init_data.question = ""
@@ -195,7 +196,15 @@ async def run_battle(player: dict, enemy_player: dict):
         # 战斗循环，直到一方血量为0
         while my_hp > 0 and enemy_hp > 0:
             # 执行一个回合
-            turn_result = await execute_turn(my_pet, enemy_pet)
+            turn_result_1 = await execute_turn(my_pet, enemy_pet)
+            turn_result = {
+                "question": turn_result_1["question"],
+                "my_answer": turn_result_1["my_answer"],
+                "enemy_answer": turn_result_1["enemy_answer"],
+                "correct_answer": turn_result_1["correct_answer"],
+                "my_pet_wrong": random.randint(0, 1),
+                "enemy_pet_wrong": random.randint(0, 1)
+            }
             
             # 根据回合结果扣血
             if turn_result["my_pet_wrong"]:
