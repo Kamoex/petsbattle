@@ -204,6 +204,7 @@ async def sign_up(player, msg_dict: dict):
         # 返回成功响应
         resp = proto.sign_up_s2c(code=0, message="注册成功")
         resp_data = proto.sign_up_s2c_data()
+        resp_data.player = proto.sign_up_s2c_data_player()
         resp_data.player.icon = PLAYER_ICONS[user_count % 2]
         resp.data = resp_data
         return resp.to_dict()
