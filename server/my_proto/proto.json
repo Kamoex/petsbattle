@@ -25,7 +25,8 @@
         "message": "错误消息 string",
         "data":{
             "player":{
-                "name": "玩家名字 string"
+                "name": "玩家名字 string",
+                "icon":"头像图片名称 string"
             },
             "pet":[
                 {"id": "宠物ID int", "name": "宠物名字 string"}
@@ -44,7 +45,10 @@
         "desc":"注册响应",
         "id": 1004,
         "code": 0,
-        "message": "0 代表成功"
+        "message": "0 代表成功",
+        "data":{
+            "player":{"icon":"头像图片名称 string"}
+        }
     },
 
     "pet_info_c2s": {
@@ -165,7 +169,8 @@
             "enemy_player_name": "敌人玩家名字 string",
             "enemy_pet_id": "敌人宠物ID int",
             "enemy_pet_name": "敌人宠物名字 string",
-            "enemy_pet_sex": "敌人宠物性别 int 0 女 1 男"
+            "enemy_pet_sex": "敌人宠物性别 int 0 女 1 男",
+            "enemy_player_icon":"敌人玩家头像图片名称 string"
         }
     },
 
