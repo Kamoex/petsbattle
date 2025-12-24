@@ -165,6 +165,42 @@ async def start_battle(player: dict, msg_dict: dict):
         return resp.to_dict()
 
 
+async def generate_questions():
+    """一次性生成10道题"""
+    try:
+        question_agent = agent(
+            system_prompt="你是一个初中语文老师，负责出题。请出10道小学语文范围内的题目，每道题目总字数要在30字以内，题目不要重复。请严格按照JSON数组格式输出，例如：[\"题目一\",\"题目二\",\"题目三\"]。只输出题目内容，不要输出答案，不要有任何多余的内容。",
+            stream=False
+        )
+        
+        question_result = await question_agent.execute("请出10道小学语文题，以JSON数组格式返回")
+        logger.info(f"出题结果: {question_result}")
+        
+        # 解析JSON数组
+        question_result = question_result.strip()
+        if question_result.startswith("```json"):
+            question_result = question_result[7:]
+        if question_result.startswith("```"):
+            question_result = question_result[3:]
+        if question_result.endswith("```"):
+            question_result = question_result[:-3]
+        question_result = question_result.strip()
+        
+        questions = json.loads(question_result)
+        if not isinstance(questions, list):
+            raise ValueError("返回的不是数组格式")
+        
+        logger.info(f"成功生成{len(questions)}道题")
+        return questions
+        
+    except Exception as e:
+        logger.error(f"generate_questions error: {e}")
+        import traceback
+        logger.error(f"traceback: {traceback.format_exc()}")
+        # 返回默认题目列表
+        return [f"题目{i+1}" for i in range(10)]
+
+
 async def run_battle(player: dict, enemy_player: dict):
     """执行战斗所有回合"""
     try:
@@ -193,10 +229,20 @@ async def run_battle(player: dict, enemy_player: dict):
         enemy_hp = 100
         turn = 1
         
+        # 初始化题目列表，先出第一批10道题
+        question_list = await generate_questions()
+        
         # 战斗循环，直到一方血量为0
         while my_hp > 0 and enemy_hp > 0:
+            # 如果题目列表为空，补充10道题
+            if not question_list:
+                question_list = await generate_questions()
+            
+            # 从列表中取一道题
+            question_text = question_list.pop(0)
+            
             # 执行一个回合
-            turn_result = await execute_turn(my_pet, enemy_pet)
+            turn_result = await execute_turn(my_pet, enemy_pet, question_text)
             # turn_result = {
             #     "question": turn_result_1["question"],
             #     "my_answer": turn_result_1["my_answer"],
@@ -267,21 +313,9 @@ async def run_battle(player: dict, enemy_player: dict):
         logger.error(f"traceback: {traceback.format_exc()}")
 
 
-async def execute_turn(my_pet: dict, enemy_pet: dict):
+async def execute_turn(my_pet: dict, enemy_pet: dict, question_text: str):
     """执行一个战斗回合"""
     try:
-        # Agent 1: 出题
-        question_agent = agent(
-            system_prompt="你是一个小学语文老师，负责出题。请出一道小学语文范围内的题目，题目总字数要在30字以内。只输出题目内容，不要输出答案，不要有任何多余的内容。",
-            stream=False
-        )
-        
-        question_result = await question_agent.execute("请出一道小学语文题")
-        logger.info(f"出题结果: {question_result}")
-        
-        # 题目就是agent返回的内容
-        question_text = question_result.strip()
-        
         # 获取双方宠物的语文能力值
         my_chinese_value = 0
         enemy_chinese_value = 0
@@ -296,17 +330,21 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
                 enemy_chinese_value = attr.get("value", 0)
                 break
         
+        attr_high = "你的语文能力非常强，有80%的概率能回答正确。"
+        attr_middle = "你的语文能力还不错，有40%的概率能回答正确。"
+        attr_low = "你的语文能力一般，有25%的概率能回答正确。"
+
         # Agent 2: 我的宠物答题
         my_pet_character = ", ".join(my_pet.get("character", []))
         my_pet_prompt = f"你是一只名叫{my_pet.get('name', '')}的宠物，你的性格特点是：{my_pet_character}。"
         my_pet_prompt += f"你的语文能力值是{my_chinese_value}（满分60分）。"
         
         if my_chinese_value >= 60:
-            my_pet_prompt += "你的语文能力非常强，一定能回答正确。"
+            my_pet_prompt += attr_high
         elif my_chinese_value >= 40:
-            my_pet_prompt += "你的语文能力还不错，大部分时候能回答正确。"
+            my_pet_prompt += attr_middle
         else:
-            my_pet_prompt += "你的语文能力一般，有一定概率会回答错误。"
+            my_pet_prompt += attr_low
         
         my_pet_prompt += f"请用符合你性格特点（{my_pet_character}）的语气和方式来回答问题。回答要简短，控制在20字以内。"
         
@@ -318,11 +356,11 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
         enemy_pet_prompt += f"你的语文能力值是{enemy_chinese_value}（满分60分）。"
         
         if enemy_chinese_value >= 60:
-            enemy_pet_prompt += "你的语文能力非常强，一定能回答正确。"
+            enemy_pet_prompt += attr_high
         elif enemy_chinese_value >= 40:
-            enemy_pet_prompt += "你的语文能力还不错，大部分时候能回答正确。"
+            enemy_pet_prompt += attr_middle
         else:
-            enemy_pet_prompt += "你的语文能力一般，有一定概率会回答错误。"
+            enemy_pet_prompt += attr_low
         
         enemy_pet_prompt += f"请用符合你性格特点（{enemy_pet_character}）的语气和方式来回答问题。回答要简短，控制在20字以内。"
         
@@ -378,8 +416,8 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
             "my_answer": my_answer,
             "enemy_answer": enemy_answer,
             "correct_answer": correct_answer,
-            "my_pet_right": not my_pet_right,
-            "enemy_pet_right": not enemy_pet_right
+            "my_pet_right": my_pet_right,
+            "enemy_pet_right": enemy_pet_right
         }
         
     except Exception as e:
