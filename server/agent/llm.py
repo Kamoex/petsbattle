@@ -15,13 +15,13 @@ API_KEY = "300000351:02a806dc4e00ecd697b7f6b41c4f6410"
 
 async def req_gpt(system_prompt: str, user_ask:str):
     # 随机一个10以内的整数
-    # x = random.randint(0, 10)
-    # y = random.randint(0, 10)
-    # if "请回答以下问题" in user_ask:
-    #     return str(x * y)
-    # if "你是一个专业的语文题目解析助手" in system_prompt:
-    #     return json.dumps({"is_right": random.randint(0, 1), "analysis": random.choice(["正确", "错误"])}, False)
-    # return f"{x} x {y} = ?"
+    x = random.randint(0, 10)
+    y = random.randint(0, 10)
+    if "请回答以下问题" in user_ask:
+        return str(x * y)
+    if "你是一个专业的语文题目解析助手" in system_prompt:
+        return json.dumps({"is_right": random.randint(0, 1), "analysis": random.choice(["正确", "错误"])}, False)
+    return f"{x} x {y} = ?"
     http_client = AsyncHTTPClient()
     result = ""
     begin_time = time.time()

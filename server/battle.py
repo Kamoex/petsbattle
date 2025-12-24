@@ -244,15 +244,15 @@ async def run_battle(player: dict, enemy_player: dict):
             question_text = question_list.pop(0)
             
             # 执行一个回合
-            turn_result = await execute_turn(my_pet, enemy_pet, question_text)
-            # turn_result = {
-            #     "question": turn_result_1["question"],
-            #     "my_answer": turn_result_1["my_answer"],
-            #     "enemy_answer": turn_result_1["enemy_answer"],
-            #     "correct_answer": turn_result_1["correct_answer"],
-            #     "my_pet_wrong": random.randint(0, 1),
-            #     "enemy_pet_wrong": random.randint(0, 1)
-            # }
+            # turn_result = await execute_turn(my_pet, enemy_pet, question_text)
+            turn_result = {
+                "question": question_text,
+                "my_answer": "ansewr1",
+                "enemy_answer": "answer2",
+                "correct_answer": "answer3",
+                "my_pet_right": random.randint(0, 1),
+                "enemy_pet_right": random.randint(0, 1)
+            }
             
             # 根据回合结果扣血
             if not turn_result["my_pet_right"]:
