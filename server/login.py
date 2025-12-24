@@ -9,6 +9,7 @@ from utils.logger import logger
 
 # 数据库目录
 DB_DATA_DIR = os.path.join(os.path.dirname(__file__), "db_data")
+PLAYER_ICONS = ["player1", "player2"]
 # 在线玩家列表
 PLAYER_LIST = {}
 
@@ -134,6 +135,7 @@ async def sign_in(player, msg_dict: dict):
         # 设置玩家信息
         player_info = proto.sign_in_s2c_data_player()
         player_info.name = user_data.get("name", "")
+        player_info.icon = user_data.get("icon", "")
         resp_data.player = player_info
         
         # 设置宠物信息
@@ -152,6 +154,7 @@ async def sign_in(player, msg_dict: dict):
         player["username"] = username
         player["password"] = password
         player["name"] = user_data.get("name", "")
+        player["icon"] = user_data.get("icon", "")
         player["pets"] = pets_data
 
         # 更新在线玩家列表
@@ -180,11 +183,19 @@ async def sign_up(player, msg_dict: dict):
             resp = proto.sign_up_s2c(code=-1, message="用户名已存在")
             return resp.to_dict()
         
+        # 检查db_data目录下用户数量
+        user_count = len(os.listdir(DB_DATA_DIR))
+        if user_count >= 100:
+            resp = proto.sign_up_s2c(code=-1, message="用户数量已达上限")
+            return resp.to_dict()
+
+
         # 创建用户数据
         user_data = {
             "username": username,
             "password": password,
-            "name": name
+            "name": name,
+            "icon": PLAYER_ICONS[user_count % 2]
         }
         
         # 保存用户数据
@@ -192,6 +203,9 @@ async def sign_up(player, msg_dict: dict):
         
         # 返回成功响应
         resp = proto.sign_up_s2c(code=0, message="注册成功")
+        resp_data = proto.sign_up_s2c_data()
+        resp_data.player.icon = PLAYER_ICONS[user_count % 2]
+        resp.data = resp_data
         return resp.to_dict()
         
     except Exception as e:

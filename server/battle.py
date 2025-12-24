@@ -73,6 +73,7 @@ async def match_battle(player: dict, msg_dict: dict):
         resp_data = proto.pet_battle_match_s2c_data()
         resp_data.status = 2
         resp_data.enemy_player_name = enemy_player.get("name", "")
+        resp_data.enemy_player_icon = enemy_player.get("icon", "")
         resp_data.enemy_pet_id = enemy_pet_id
         resp_data.enemy_pet_name = enemy_pet.get("name", "")
         resp_data.enemy_pet_sex = enemy_pet.get("sex", 0)
@@ -84,6 +85,7 @@ async def match_battle(player: dict, msg_dict: dict):
         enemy_resp_data = proto.pet_battle_match_s2c_data()
         enemy_resp_data.status = 2
         enemy_resp_data.enemy_player_name = player.get("name", "")
+        enemy_resp_data.enemy_player_icon = player.get("icon", "")
         enemy_resp_data.enemy_pet_id = pet_id
         enemy_resp_data.enemy_pet_name = my_pet.get("name", "")
         enemy_resp_data.enemy_pet_sex = my_pet.get("sex", 0)

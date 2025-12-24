@@ -245,8 +245,8 @@ class pet_battle_turn_s2c_data:
         self.answers: str = ""
         self.enemy_answers: str = ""
         self.correct_answer: str = ""
-        self.my_pet_right: str = ""
-        self.enemy_pet_right: str = ""
+        self.my_pet_right: bool = False
+        self.enemy_pet_right: bool = False
 
     def to_dict(self) -> dict:
         result = {}
@@ -578,8 +578,6 @@ class pet_battle_result_s2c:
 
 class pet_battle_match_cancel_c2s:
     id: int = 1018
-
-    def __init__(self):
 
     def to_dict(self) -> dict:
         result = {}
