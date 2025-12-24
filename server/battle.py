@@ -171,11 +171,11 @@ async def generate_questions():
     """一次性生成10道题"""
     try:
         question_agent = agent(
-            system_prompt="你是一个初中语文老师，负责出题。请出10道小学语文范围内的题目，每道题目总字数要在30字以内，题目不要重复。请严格按照JSON数组格式输出，例如：[\"题目一\",\"题目二\",\"题目三\"]。只输出题目内容，不要输出答案，不要有任何多余的内容。",
+            system_prompt="你是一个高中语文老师，负责出题。每道题目总字数要在30字以内，题目不要重复。请严格按照JSON数组格式输出，例如：[\"题目一\",\"题目二\",\"题目三\"]。只输出题目内容，不要输出答案，不要有任何多余的内容。",
             stream=False
         )
         
-        question_result = await question_agent.execute("请出10道小学语文题，以JSON数组格式返回")
+        question_result = await question_agent.execute("请出10道语文题，以JSON数组格式返回")
         logger.info(f"出题结果: {question_result}")
         
         # 解析JSON数组
@@ -234,8 +234,8 @@ async def run_battle(player: dict, enemy_player: dict):
         # 初始化题目列表，先出第一批10道题
         question_list = await generate_questions()
         
-        # 战斗循环，批量并行执行（每批5回合）
-        BATCH_SIZE = 5
+        # 战斗循环，批量并行执行（每批5回合） TODO revert 1
+        BATCH_SIZE = 1
         while my_hp > 0 and enemy_hp > 0:
             # 确保题目列表至少有5道题
             while len(question_list) < BATCH_SIZE:
@@ -245,11 +245,20 @@ async def run_battle(player: dict, enemy_player: dict):
             # 准备本批次的5道题
             batch_questions = [question_list.pop(0) for _ in range(BATCH_SIZE)]
             
-            # 并行执行5个回合
-            batch_results = await asyncio.gather(*[
-                execute_turn(my_pet, enemy_pet, question_text) 
-                for question_text in batch_questions
-            ])
+            # 并行执行5个回合 TODO revert
+            # batch_results = await asyncio.gather(*[
+            #     execute_turn(my_pet, enemy_pet, question_text) 
+            #     for question_text in batch_questions
+            # ])
+
+            batch_results = [{
+                "question": batch_questions[0],
+                "my_answer": "answer1",
+                "enemy_answer": "answer2",
+                "correct_answer": "answer3",
+                "my_pet_right": random.randint(0, 1),
+                "enemy_pet_right": random.randint(0, 1)
+            }]
             
             # 按顺序处理批次结果
             for turn_result in batch_results:
@@ -352,7 +361,7 @@ async def execute_turn(my_pet: dict, enemy_pet: dict, question_text: str):
         else:
             my_pet_prompt += attr_low
         
-        my_pet_prompt += f"请用符合你性格特点（{my_pet_character}）的语气和方式来回答问题。回答要简短，控制在20字以内。"
+        my_pet_prompt += f"请用符合你性格特点（{my_pet_character}）的语气和方式来回答问题。对于不知道的问题可以随便回答，回答要简短，控制在20字以内。"
         
         my_pet_agent = agent(system_prompt=my_pet_prompt, stream=False)
         
@@ -368,7 +377,7 @@ async def execute_turn(my_pet: dict, enemy_pet: dict, question_text: str):
         else:
             enemy_pet_prompt += attr_low
         
-        enemy_pet_prompt += f"请用符合你性格特点（{enemy_pet_character}）的语气和方式来回答问题。回答要简短，控制在20字以内。"
+        enemy_pet_prompt += f"请用符合你性格特点（{enemy_pet_character}）的语气和方式来回答问题。对于不知道的问题可以随便回答，回答要简短，控制在20字以内。"
         
         enemy_pet_agent = agent(system_prompt=enemy_pet_prompt, stream=False)
         
