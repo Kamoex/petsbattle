@@ -134,7 +134,7 @@ async def start_battle(player: dict, msg_dict: dict):
         init_data.answers = ""
         init_data.enemy_answers = ""
         init_data.correct_answer = ""
-        init_data.winner_id = 0
+        init_data.winner_name = ""
         
         init_resp = proto.pet_battle_turn_s2c()
         init_resp.data = init_data
@@ -196,23 +196,23 @@ async def run_battle(player: dict, enemy_player: dict):
         # 战斗循环，直到一方血量为0
         while my_hp > 0 and enemy_hp > 0:
             # 执行一个回合
-            turn_result_1 = await execute_turn(my_pet, enemy_pet)
-            turn_result = {
-                "question": turn_result_1["question"],
-                "my_answer": turn_result_1["my_answer"],
-                "enemy_answer": turn_result_1["enemy_answer"],
-                "correct_answer": turn_result_1["correct_answer"],
-                "my_pet_wrong": random.randint(0, 1),
-                "enemy_pet_wrong": random.randint(0, 1)
-            }
+            turn_result = await execute_turn(my_pet, enemy_pet)
+            # turn_result = {
+            #     "question": turn_result_1["question"],
+            #     "my_answer": turn_result_1["my_answer"],
+            #     "enemy_answer": turn_result_1["enemy_answer"],
+            #     "correct_answer": turn_result_1["correct_answer"],
+            #     "my_pet_wrong": random.randint(0, 1),
+            #     "enemy_pet_wrong": random.randint(0, 1)
+            # }
             
             # 根据回合结果扣血
-            if turn_result["my_pet_wrong"]:
+            if not turn_result["my_pet_right"]:
                 my_hp -= 30
                 if my_hp < 0:
                     my_hp = 0
             
-            if turn_result["enemy_pet_wrong"]:
+            if not turn_result["enemy_pet_right"]:
                 enemy_hp -= 30
                 if enemy_hp < 0:
                     enemy_hp = 0
@@ -226,7 +226,8 @@ async def run_battle(player: dict, enemy_player: dict):
             turn_data.answers = turn_result["my_answer"]
             turn_data.enemy_answers = turn_result["enemy_answer"]
             turn_data.correct_answer = turn_result["correct_answer"]
-            turn_data.winner_id = 0  # 回合中不判断胜利者
+            turn_data.my_pet_right = turn_result["my_pet_right"]
+            turn_data.enemy_pet_right = turn_result["enemy_pet_right"]
             
             turn_resp = proto.pet_battle_turn_s2c()
             turn_resp.data = turn_data
@@ -243,7 +244,8 @@ async def run_battle(player: dict, enemy_player: dict):
             enemy_turn_data.answers = turn_result["enemy_answer"]
             enemy_turn_data.enemy_answers = turn_result["my_answer"]
             enemy_turn_data.correct_answer = turn_result["correct_answer"]
-            enemy_turn_data.winner_id = 0
+            enemy_turn_data.my_pet_right = turn_result["enemy_pet_right"]
+            enemy_turn_data.enemy_pet_right = turn_result["my_pet_right"]
             
             enemy_turn_resp = proto.pet_battle_turn_s2c()
             enemy_turn_resp.data = enemy_turn_data
@@ -332,7 +334,7 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
         
         # Agent 4: 判断答案
         judge_agent = agent(
-            system_prompt="你是一个判题老师，负责判断学生的答案是否正确。你需要先推理出题目的正确答案，然后判断两个学生的回答是否正确。请严格按照以下格式输出：\n正确答案：[答案内容]\n学生1：正确/错误\n学生2：正确/错误",
+            system_prompt=f"你是一个判题老师，负责判断学生的答案是否正确。你需要先推理出题目的正确答案，然后判断两个学生的回答是否正确。请严格按照以下JSON格式输出：\n{{'correct_answer': '正确答案', 'student1_is_right': '正确/错误', 'student2_is_right': '正确/错误'}}",
             stream=False
         )
         
@@ -340,37 +342,29 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
         judge_result = await judge_agent.execute(judge_prompt)
         logger.info(f"判题结果: {judge_result}")
         
-        # 解析判题结果
-        correct_answer = ""
-        my_pet_wrong = False
-        enemy_pet_wrong = False
+        # 解析json结果
+        judge_result = judge_result.strip()
+        if judge_result.startswith("```json"):
+            judge_result = judge_result[7:]
+        if judge_result.startswith("```"):
+            judge_result = judge_result[3:]
+        if judge_result.endswith("```"):
+            judge_result = judge_result[:-3]
+        judge_result = judge_result.strip()
+        result_json = json.loads(judge_result)
+
+        correct_answer = result_json.get("correct_answer", "")
+        my_pet_right = result_json.get("student1_is_right", "") == "正确"
+        enemy_pet_right = result_json.get("student2_is_right", "") == "正确"
         
-        # 解析正确答案和判题结果
-        lines = judge_result.split("\n")
-        for line in lines:
-            line = line.strip()
-            if "正确答案" in line or "正确答案" in line:
-                # 提取正确答案
-                if "：" in line:
-                    correct_answer = line.split("：", 1)[1].strip()
-                elif ":" in line:
-                    correct_answer = line.split(":", 1)[1].strip()
-            
-            if "学生1" in line:
-                if "错误" in line:
-                    my_pet_wrong = True
-            
-            if "学生2" in line:
-                if "错误" in line:
-                    enemy_pet_wrong = True
-        
+
         return {
             "question": question_text,
             "my_answer": my_answer,
             "enemy_answer": enemy_answer,
             "correct_answer": correct_answer,
-            "my_pet_wrong": my_pet_wrong,
-            "enemy_pet_wrong": enemy_pet_wrong
+            "my_pet_right": not my_pet_right,
+            "enemy_pet_right": not enemy_pet_right
         }
         
     except Exception as e:
@@ -383,8 +377,8 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
             "my_answer": "",
             "enemy_answer": "",
             "correct_answer": "",
-            "my_pet_wrong": False,
-            "enemy_pet_wrong": False
+            "my_pet_right": False,
+            "enemy_pet_right": False
         }
 
 

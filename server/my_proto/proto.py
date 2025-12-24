@@ -221,7 +221,8 @@ class pet_battle_turn_s2c_data:
         self.answers: str = ""
         self.enemy_answers: str = ""
         self.correct_answer: str = ""
-        self.winner_name: str = ""
+        self.my_pet_right: bool = False
+        self.enemy_pet_right: bool = False
 
     def to_dict(self) -> dict:
         result = {}
@@ -233,7 +234,8 @@ class pet_battle_turn_s2c_data:
         result['answers'] = self.answers
         result['enemy_answers'] = self.enemy_answers
         result['correct_answer'] = self.correct_answer
-        result['winner_name'] = self.winner_name
+        result['my_pet_right'] = self.my_pet_right
+        result['enemy_pet_right'] = self.enemy_pet_right
         return result
 
 

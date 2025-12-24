@@ -187,7 +187,8 @@
             "answers": "答案 string",
             "enemy_answers": "敌人答案 string",
             "correct_answer": "评判答案 string",
-            "winner_name": "获胜玩家名字 string"
+            "my_pet_right": "我方宠物是否答错 bool false 正确 true 错误",
+            "enemy_pet_right": "敌方宠物是否答错 bool false 正确 true 错误"
         }
     },
     "pet_battle_result_s2c": {
