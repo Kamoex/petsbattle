@@ -234,77 +234,81 @@ async def run_battle(player: dict, enemy_player: dict):
         # 初始化题目列表，先出第一批10道题
         question_list = await generate_questions()
         
-        # 战斗循环，直到一方血量为0
+        # 战斗循环，批量并行执行（每批5回合）
+        BATCH_SIZE = 5
         while my_hp > 0 and enemy_hp > 0:
-            # 如果题目列表为空，补充10道题
-            if not question_list:
-                question_list = await generate_questions()
+            # 确保题目列表至少有5道题
+            while len(question_list) < BATCH_SIZE:
+                new_questions = await generate_questions()
+                question_list.extend(new_questions)
             
-            # 从列表中取一道题
-            question_text = question_list.pop(0)
+            # 准备本批次的5道题
+            batch_questions = [question_list.pop(0) for _ in range(BATCH_SIZE)]
             
-            # 执行一个回合
-            # turn_result = await execute_turn(my_pet, enemy_pet, question_text)
-            turn_result = {
-                "question": question_text,
-                "my_answer": "ansewr1",
-                "enemy_answer": "answer2",
-                "correct_answer": "answer3",
-                "my_pet_right": random.randint(0, 1),
-                "enemy_pet_right": random.randint(0, 1)
-            }
+            # 并行执行5个回合
+            batch_results = await asyncio.gather(*[
+                execute_turn(my_pet, enemy_pet, question_text) 
+                for question_text in batch_questions
+            ])
             
-            # 根据回合结果扣血
-            if not turn_result["my_pet_right"]:
-                my_hp -= 30
-                if my_hp < 0:
-                    my_hp = 0
-            
-            if not turn_result["enemy_pet_right"]:
-                enemy_hp -= 30
-                if enemy_hp < 0:
-                    enemy_hp = 0
-            
-            # 发送回合消息给当前玩家
-            turn_data = proto.pet_battle_turn_s2c_data()
-            turn_data.turn = turn
-            turn_data.hp = my_hp
-            turn_data.enemy_hp = enemy_hp
-            turn_data.question = turn_result["question"]
-            turn_data.answers = turn_result["my_answer"]
-            turn_data.enemy_answers = turn_result["enemy_answer"]
-            turn_data.correct_answer = turn_result["correct_answer"]
-            turn_data.my_pet_right = turn_result["my_pet_right"]
-            turn_data.enemy_pet_right = turn_result["enemy_pet_right"]
-            
-            turn_resp = proto.pet_battle_turn_s2c()
-            turn_resp.data = turn_data
-            
-            if "session" in player:
-                player["session"].send_data(turn_resp.to_dict())
-            
-            # 发送回合消息给对手玩家（视角相反）
-            enemy_turn_data = proto.pet_battle_turn_s2c_data()
-            enemy_turn_data.turn = turn
-            enemy_turn_data.hp = enemy_hp
-            enemy_turn_data.enemy_hp = my_hp
-            enemy_turn_data.question = turn_result["question"]
-            enemy_turn_data.answers = turn_result["enemy_answer"]
-            enemy_turn_data.enemy_answers = turn_result["my_answer"]
-            enemy_turn_data.correct_answer = turn_result["correct_answer"]
-            enemy_turn_data.my_pet_right = turn_result["enemy_pet_right"]
-            enemy_turn_data.enemy_pet_right = turn_result["my_pet_right"]
-            
-            enemy_turn_resp = proto.pet_battle_turn_s2c()
-            enemy_turn_resp.data = enemy_turn_data
-            
-            if "session" in enemy_player:
-                enemy_player["session"].send_data(enemy_turn_resp.to_dict())
-            
-            turn += 1
-            
-            # 添加短暂延迟，避免消息发送过快
-            # await asyncio.sleep(0.1)
+            # 按顺序处理批次结果
+            for turn_result in batch_results:
+                # 如果已经结束战斗，丢弃后续结果
+                if my_hp <= 0 or enemy_hp <= 0:
+                    break
+                
+                # 根据回合结果扣血
+                if not turn_result["my_pet_right"]:
+                    my_hp -= 30
+                    if my_hp < 0:
+                        my_hp = 0
+                
+                if not turn_result["enemy_pet_right"]:
+                    enemy_hp -= 30
+                    if enemy_hp < 0:
+                        enemy_hp = 0
+                
+                # 发送回合消息给当前玩家
+                turn_data = proto.pet_battle_turn_s2c_data()
+                turn_data.turn = turn
+                turn_data.hp = my_hp
+                turn_data.enemy_hp = enemy_hp
+                turn_data.question = turn_result["question"]
+                turn_data.answers = turn_result["my_answer"]
+                turn_data.enemy_answers = turn_result["enemy_answer"]
+                turn_data.correct_answer = turn_result["correct_answer"]
+                turn_data.my_pet_right = turn_result["my_pet_right"]
+                turn_data.enemy_pet_right = turn_result["enemy_pet_right"]
+                
+                turn_resp = proto.pet_battle_turn_s2c()
+                turn_resp.data = turn_data
+                
+                if "session" in player:
+                    player["session"].send_data(turn_resp.to_dict())
+                
+                # 发送回合消息给对手玩家（视角相反）
+                enemy_turn_data = proto.pet_battle_turn_s2c_data()
+                enemy_turn_data.turn = turn
+                enemy_turn_data.hp = enemy_hp
+                enemy_turn_data.enemy_hp = my_hp
+                enemy_turn_data.question = turn_result["question"]
+                enemy_turn_data.answers = turn_result["enemy_answer"]
+                enemy_turn_data.enemy_answers = turn_result["my_answer"]
+                enemy_turn_data.correct_answer = turn_result["correct_answer"]
+                enemy_turn_data.my_pet_right = turn_result["enemy_pet_right"]
+                enemy_turn_data.enemy_pet_right = turn_result["my_pet_right"]
+                
+                enemy_turn_resp = proto.pet_battle_turn_s2c()
+                enemy_turn_resp.data = enemy_turn_data
+                
+                if "session" in enemy_player:
+                    enemy_player["session"].send_data(enemy_turn_resp.to_dict())
+                
+                turn += 1
+                
+                # 如果已经结束战斗，跳出处理循环
+                if my_hp <= 0 or enemy_hp <= 0:
+                    break
         
         # 战斗结束，计算结果
         await send_battle_result(player, enemy_player, my_hp, enemy_hp, my_pet, enemy_pet)
@@ -332,14 +336,14 @@ async def execute_turn(my_pet: dict, enemy_pet: dict, question_text: str):
                 enemy_chinese_value = attr.get("value", 0)
                 break
         
-        attr_high = "你的语文能力非常强，有80%的概率能回答正确。"
-        attr_middle = "你的语文能力还不错，有40%的概率能回答正确。"
-        attr_low = "你的语文能力一般，有25%的概率能回答正确。"
+        attr_high = "你的能力非常强，对于任何问题，都有80%的概率能回答正确。"
+        attr_middle = "你的能力一般，对于任何问题，只有40%的概率能回答正确。"
+        attr_low = "你的能力非常差，对于任何问题，都只有25%的概率能回答正确。"
 
         # Agent 2: 我的宠物答题
         my_pet_character = ", ".join(my_pet.get("character", []))
         my_pet_prompt = f"你是一只名叫{my_pet.get('name', '')}的宠物，你的性格特点是：{my_pet_character}。"
-        my_pet_prompt += f"你的语文能力值是{my_chinese_value}（满分60分）。"
+        # my_pet_prompt += f"你的语文能力值是{my_chinese_value}（满分60分）。"
         
         if my_chinese_value >= 60:
             my_pet_prompt += attr_high
@@ -355,7 +359,7 @@ async def execute_turn(my_pet: dict, enemy_pet: dict, question_text: str):
         # Agent 3: 对手宠物答题
         enemy_pet_character = ", ".join(enemy_pet.get("character", []))
         enemy_pet_prompt = f"你是一只名叫{enemy_pet.get('name', '')}的宠物，你的性格特点是：{enemy_pet_character}。"
-        enemy_pet_prompt += f"你的语文能力值是{enemy_chinese_value}（满分60分）。"
+        # enemy_pet_prompt += f"你的语文能力值是{enemy_chinese_value}（满分60分）。"
         
         if enemy_chinese_value >= 60:
             enemy_pet_prompt += attr_high
