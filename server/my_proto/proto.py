@@ -3,7 +3,7 @@
 由 convert.py 从 proto.json 生成
 """
 
-# from __future__ import annotations
+from __future__ import annotations
 from typing import List, Any, Optional
 
 
@@ -22,10 +22,12 @@ class sign_in_s2c_data:
 class sign_in_s2c_data_player:
     def __init__(self):
         self.name: str = ""
+        self.icon: str = ""
 
     def to_dict(self) -> dict:
         result = {}
         result['name'] = self.name
+        result['icon'] = self.icon
         return result
 
 
@@ -38,6 +40,26 @@ class sign_in_s2c_data_pet:
         result = {}
         result['id'] = self.id
         result['name'] = self.name
+        return result
+
+
+class sign_up_s2c_data:
+    def __init__(self):
+        self.player: sign_up_s2c_data_player = None
+
+    def to_dict(self) -> dict:
+        result = {}
+        result['player'] = self.player.to_dict() if self.player is not None else None
+        return result
+
+
+class sign_up_s2c_data_player:
+    def __init__(self):
+        self.icon: str = ""
+
+    def to_dict(self) -> dict:
+        result = {}
+        result['icon'] = self.icon
         return result
 
 
@@ -200,6 +222,7 @@ class pet_battle_match_s2c_data:
         self.enemy_pet_id: int = -1
         self.enemy_pet_name: str = ""
         self.enemy_pet_sex: int = -1
+        self.enemy_player_icon: str = ""
 
     def to_dict(self) -> dict:
         result = {}
@@ -208,6 +231,7 @@ class pet_battle_match_s2c_data:
         result['enemy_pet_id'] = self.enemy_pet_id
         result['enemy_pet_name'] = self.enemy_pet_name
         result['enemy_pet_sex'] = self.enemy_pet_sex
+        result['enemy_player_icon'] = self.enemy_player_icon
         return result
 
 
@@ -221,8 +245,8 @@ class pet_battle_turn_s2c_data:
         self.answers: str = ""
         self.enemy_answers: str = ""
         self.correct_answer: str = ""
-        self.my_pet_right: bool = False
-        self.enemy_pet_right: bool = False
+        self.my_pet_right: str = ""
+        self.enemy_pet_right: str = ""
 
     def to_dict(self) -> dict:
         result = {}
@@ -346,12 +370,14 @@ class sign_up_s2c:
     def __init__(self, code: int = -1, message: str = ""):
         self.code: int = code
         self.message: str = message
+        self.data: sign_up_s2c_data = None
 
     def to_dict(self) -> dict:
         result = {}
         result['id'] = self.id
         result['code'] = self.code
         result['message'] = self.message
+        result['data'] = self.data.to_dict() if self.data is not None else None
         return result
 
 
@@ -549,16 +575,17 @@ class pet_battle_result_s2c:
         result['data'] = self.data.to_dict() if self.data is not None else None
         return result
 
+
 class pet_battle_match_cancel_c2s:
     id: int = 1018
 
     def __init__(self):
-        pass
 
     def to_dict(self) -> dict:
         result = {}
         result['id'] = self.id
         return result
+
 
 class pet_battle_match_cancel_s2c:
     id: int = 1019
@@ -573,3 +600,4 @@ class pet_battle_match_cancel_s2c:
         result['code'] = self.code
         result['message'] = self.message
         return result
+
