@@ -311,8 +311,6 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
         my_pet_prompt += f"请用符合你性格特点（{my_pet_character}）的语气和方式来回答问题。回答要简短，控制在20字以内。"
         
         my_pet_agent = agent(system_prompt=my_pet_prompt, stream=False)
-        my_answer = await my_pet_agent.execute(f"请回答以下问题：{question_text}")
-        logger.info(f"我的宠物答案: {my_answer}")
         
         # Agent 3: 对手宠物答题
         enemy_pet_character = ", ".join(enemy_pet.get("character", []))
@@ -329,29 +327,46 @@ async def execute_turn(my_pet: dict, enemy_pet: dict):
         enemy_pet_prompt += f"请用符合你性格特点（{enemy_pet_character}）的语气和方式来回答问题。回答要简短，控制在20字以内。"
         
         enemy_pet_agent = agent(system_prompt=enemy_pet_prompt, stream=False)
-        enemy_answer = await enemy_pet_agent.execute(f"请回答以下问题：{question_text}")
+        
+        # 并行执行 Agent 2 和 Agent 3
+        my_answer, enemy_answer = await asyncio.gather(
+            my_pet_agent.execute(f"请回答以下问题：{question_text}"),
+            enemy_pet_agent.execute(f"请回答以下问题：{question_text}")
+        )
+        logger.info(f"我的宠物答案: {my_answer}")
         logger.info(f"对手宠物答案: {enemy_answer}")
         
         # Agent 4: 判断答案
         judge_agent = agent(
-            system_prompt=f"你是一个判题老师，负责判断学生的答案是否正确。你需要先推理出题目的正确答案，然后判断两个学生的回答是否正确。请严格按照以下JSON格式输出：\n{{'correct_answer': '正确答案', 'student1_is_right': '正确/错误', 'student2_is_right': '正确/错误'}}",
+            system_prompt=f"你是一个判题老师，负责判断学生的答案是否正确。你需要先推理出题目的正确答案，然后判断两个学生的回答是否正确。请严格按照以下JSON格式输出：\n{{\"correct_answer\": \"正确答案\", \"student1_is_right\": \"正确/错误\", \"student2_is_right\": \"正确/错误\"}}",
             stream=False
         )
         
         judge_prompt = f"题目：{question_text}\n\n学生1的回答：{my_answer}\n学生2的回答：{enemy_answer}\n\n请判断两个学生的答案是否正确。"
-        judge_result = await judge_agent.execute(judge_prompt)
-        logger.info(f"判题结果: {judge_result}")
         
-        # 解析json结果
-        judge_result = judge_result.strip()
-        if judge_result.startswith("```json"):
-            judge_result = judge_result[7:]
-        if judge_result.startswith("```"):
-            judge_result = judge_result[3:]
-        if judge_result.endswith("```"):
-            judge_result = judge_result[:-3]
-        judge_result = judge_result.strip()
-        result_json = json.loads(judge_result)
+        # 重试逻辑：最多重试3次
+        result_json = None
+        for retry_count in range(3):
+            try:
+                judge_result = await judge_agent.execute(judge_prompt)
+                logger.info(f"判题结果: {judge_result}")
+                
+                # 解析json结果
+                judge_result = judge_result.strip()
+                if judge_result.startswith("```json"):
+                    judge_result = judge_result[7:]
+                if judge_result.startswith("```"):
+                    judge_result = judge_result[3:]
+                if judge_result.endswith("```"):
+                    judge_result = judge_result[:-3]
+                judge_result = judge_result.strip()
+                result_json = json.loads(judge_result)
+                break  # 解析成功，跳出循环
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON解析失败 (第{retry_count + 1}次尝试): {e}")
+                if retry_count == 2:  # 最后一次重试也失败
+                    raise Exception(f"JSON解析失败，已重试3次: {e}")
+                # 继续重试
 
         correct_answer = result_json.get("correct_answer", "")
         my_pet_right = result_json.get("student1_is_right", "") == "正确"
@@ -457,7 +472,7 @@ async def send_battle_result(player: dict, enemy_player: dict, my_hp: int, enemy
         import traceback
         logger.error(f"traceback: {traceback.format_exc()}")
 
-def match_cancel_battle(player: dict, msg_dict: dict):
+async def match_cancel_battle(player: dict, msg_dict: dict):
     """取消战斗匹配"""
     try:
         # 清理临时战斗信息
